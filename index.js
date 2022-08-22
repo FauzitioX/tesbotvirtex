@@ -976,6 +976,34 @@ reply(lang.NoToStik(prefix, command))
 }
 }
 break
+case 'setppbot': {
+if (!isRegistered) return replyReg(api.verif)
+if (isBan) return reply(api.ban)
+if (!isCreator) return reply(api.owner)
+if (!quoted) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+if (!/image/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+if (/webp/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+var media = await sock.downloadAndSaveMediaMessage(quoted, 'ppbot.jpeg')
+if (args[0] == `'panjang'`) {
+var { img } = await generateProfilePicture(media)
+await sock.query({
+tag: 'iq',
+attrs: {
+to: botNumber,
+type:'set',
+xmlns: 'w:profile:picture'
+},
+content: [
+{
+tag: 'picture',
+attrs: { type: 'image' },
+content: img
+}
+]
+})
+fs.unlinkSync(media)
+reply(`Sukses`)
+break
 			case 'setppbot': case 'setpp': {
                 if (!m.key.fromMe && !isCreator) return reply(lang.ownerOnly())
                 if (!quoted) return reply(lang.NoPpBot(prefix, command))
