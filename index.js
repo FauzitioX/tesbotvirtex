@@ -31,6 +31,7 @@ const path = require('path')
 const os = require('os')
 const fetch = require('node-fetch')
 const ffmpeg = require('fluent-ffmpeg')
+const jimp = require('jimp')
 const google = require('google-it')
 const { EmojiAPI } = require("emoji-api");
 const emoji = new EmojiAPI()
@@ -52,7 +53,7 @@ const { yta, ytv, ytvd, ytvf, servers } = require('./lib/y2mate')
 const { pinterest, wallpaper, wikimedia, hentai, quotesAnime} = require('./lib/scraper')
 const {bytesToSize,fileIO,  UploadFileUgu,telesticker, webp2mp4File, TelegraPh } = require('./lib/uploader')
 const { addResponList, delResponList, isAlreadyResponList, isAlreadyResponListGroup, sendResponList, updateResponList, getDataResponList } = require('./lib/respon-list');
-const { smsg, getGroupAdmins, formatp, tanggal, formatDate, getTime, isUrl, sleep, clockString, runtime, fetchJson, getBuffer, jsonformat, delay, format, logic, generateProfilePicture, parseMention, getRandom } = require('./lib/myfunc')
+const { smsg, getGroupAdmins, formatp, tanggal, formatDate, getTime, isUrl, sleep, clockString, runtime, fetchJson, getBuffer, jsonformat, delay, format, logic, parseMention, getRandom } = require('./lib/myfunc')
 
 const setiker = JSON.parse(fs.readFileSync('./database/stik.json'))
 const audionye = JSON.parse(fs.readFileSync('./database/vn.json'))
@@ -474,7 +475,50 @@ alpha.sendReadReceipt(m.chat, sender, [m.key.id])
       return
       }
       await alpha.sendPresenceUpdate('available', m.chat)
+      
+const generateProfilePicture = async(buffer) => {
+const jimp_1 = await jimp.read(buffer);
+const resz = jimp_1.getWidth() > jimp_1.getHeight() ? jimp_1.resize(550, jimp.AUTO) : jimp_1.resize(jimp.AUTO, 650)
+const jimp_2 = await jimp.read(await resz.getBufferAsync(jimp.MIME_JPEG));
+return {
+img: await resz.getBufferAsync(jimp.MIME_JPEG)
+}
+}
+
         switch(command) {
+
+case 'setppbot': {
+if (!quoted) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+if (!/image/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+if (/webp/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
+var media = await alpha.downloadAndSaveMediaMessage(quoted, 'ppbot.jpeg')
+if (args[0] == `'panjang'`) {
+var { img } = await generateProfilePicture(media)
+await alpha.query({
+tag: 'iq',
+attrs: {
+to: botNumber,
+type:'set',
+xmlns: 'w:profile:picture'
+},
+content: [
+{
+tag: 'picture',
+attrs: { type: 'image' },
+content: img
+}
+]
+})
+fs.unlinkSync(media)
+reply(`Sukses`)
+} else {
+var memeg = await alpha.updateProfilePicture(botNumber, { url: media })
+fs.unlinkSync(media)
+reply(`Sukses`)
+}
+}
+break
+
         	case 'absen':
         if (m.isGroup) { 
   if (!(isGroupAdmins || isCreator))return reply(lang.adminOnly())
@@ -975,34 +1019,6 @@ await fs.unlinkSync(encmedia)
 reply(lang.NoToStik(prefix, command))
 }
 }
-break
-case 'setppbot': {
-if (!isRegistered) return replyReg(api.verif)
-if (isBan) return reply(api.ban)
-if (!isCreator) return reply(api.owner)
-if (!quoted) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
-if (!/image/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
-if (/webp/.test(mime)) return reply(`Kirim/Reply Image Dengan Caption ${prefix + command}`)
-var media = await sock.downloadAndSaveMediaMessage(quoted, 'ppbot.jpeg')
-if (args[0] == `'panjang'`) {
-var { img } = await generateProfilePicture(media)
-await sock.query({
-tag: 'iq',
-attrs: {
-to: botNumber,
-type:'set',
-xmlns: 'w:profile:picture'
-},
-content: [
-{
-tag: 'picture',
-attrs: { type: 'image' },
-content: img
-}
-]
-})
-fs.unlinkSync(media)
-reply(`Sukses`)
 break
 			case 'setppbot': case 'setpp': {
                 if (!m.key.fromMe && !isCreator) return reply(lang.ownerOnly())
